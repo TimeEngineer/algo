@@ -1,0 +1,23 @@
+[package]
+name = "bin"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dmatrix = { path = "../api/dmatrix" }
+matrix = { path = "../api/matrix" }
+vector = { path = "../api/vector" }
+optim = { path = "../api/optim" }
+simd = { path = "../api/simd" }
+svg = { path = "../api/svg"}
+rand = "0"
+
+[[bin]]
+name = "interact"
+path = "src/interact.rs"
+
+[[bin]]
+name = "jam"
+path = "src/jam.rs"

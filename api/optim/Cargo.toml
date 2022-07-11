@@ -1,0 +1,11 @@
+[package]
+name = "optim"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+matrix = { path = "../matrix" }
+vector = { path = "../vector" }
+
+rand = "0"
+rand_distr = "0"
