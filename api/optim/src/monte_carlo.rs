@@ -1,58 +1,70 @@
 use rand::prelude::{SliceRandom, ThreadRng};
-use std::ops::Add;
+use std::time::{Duration, Instant};
 
-use crate::Obj;
-
-pub trait MonteCarlo<A: Copy + std::fmt::Debug, T: Add<Output = T> + PartialOrd + std::fmt::Debug>:
-    Clone
-{
-    /// Generate all possible actions
+/// A: Action
+///
+/// The more depth, the less precision
+pub trait MonteCarlo<A: Copy + std::fmt::Debug>: Clone {
+    /// Generate all possible actions,don't forget to clear
     fn fill(&self, actions: &mut Vec<A>);
     /// Update the system
-    fn update(&mut self, action: A) -> T;
+    fn update(&mut self, action: A) -> f32;
 
-    fn rng() -> ThreadRng {
-        rand::thread_rng()
-    }
-
-    fn run(&self, action: A, actions: &mut Vec<A>, rng: &mut ThreadRng) -> T {
+    fn run(&self, action: A, actions: &mut Vec<A>, max_depth: usize, rng: &mut ThreadRng) -> f32 {
         let mut run = self.clone();
         let mut score = run.update(action);
+        let mut depth = 1;
         run.fill(actions);
 
         while let Some(action) = actions.choose(rng) {
-            score = score + run.update(*action);
+            if depth == max_depth {
+                return score;
+            }
+            score += run.update(*action);
+            depth += 1;
             run.fill(actions);
         }
 
         score
     }
 
-    fn multi_run(&self, action: A, n: usize, actions: &mut Vec<A>, rng: &mut ThreadRng) -> T {
-        (0..n)
-            .map(|_| self.run(action, actions, rng))
-            .reduce(|acc, score| acc + score)
-            .unwrap()
+    fn multi_run(
+        &self,
+        max: Duration,
+        action: A,
+        actions: &mut Vec<A>,
+        max_depth: usize,
+        rng: &mut ThreadRng,
+    ) -> f32 {
+        let now = Instant::now();
+        let mut max_time = Duration::default();
+        let mut s = 0.;
+        let mut n = 0.;
+
+        while now.elapsed() + max_time < max {
+            let t = Instant::now();
+            s += self.run(action, actions, max_depth, rng);
+            n += 1.;
+            max_time = std::cmp::max(max_time, t.elapsed())
+        }
+
+        s / n
     }
 
-    fn mc_play(&self, n: usize, actions: &mut Vec<A>, rng: &mut ThreadRng, obj: Obj) -> Option<A> {
-        assert!(n > 0);
+    fn mc_play(
+        &self,
+        max: Duration,
+        actions: &mut Vec<A>,
+        max_depth: usize,
+        rng: &mut ThreadRng,
+    ) -> Option<(A, f32)> {
         self.fill(actions);
+        let max = Duration::from_nanos((max.as_nanos() / actions.len() as u128) as u64);
         let mut _actions = vec![];
-
-        match obj {
-            Obj::Max => actions
-                .iter()
-                .copied()
-                .map(|action| (self.multi_run(action, n, &mut _actions, rng), action))
-                .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
-                .map(|max| max.1),
-            Obj::Min => actions
-                .iter()
-                .copied()
-                .map(|action| (self.multi_run(action, n, &mut _actions, rng), action))
-                .min_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
-                .map(|max| max.1),
-        }
+        actions
+            .iter()
+            .copied()
+            .map(|a| (a, self.multi_run(max, a, &mut _actions, max_depth, rng)))
+            .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
     }
 }

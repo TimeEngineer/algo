@@ -444,7 +444,7 @@ fn forward(mut input: [f32; {IN}]) -> [f32; {OUT}] {{
         stats
     }
 
-    pub fn train_random<G: Game>(
+    pub fn train_random<G: Game, const EPOCH: usize>(
         &mut self,
         player: usize,
         game: &G,
@@ -453,9 +453,7 @@ fn forward(mut input: [f32; {IN}]) -> [f32; {OUT}] {{
         rng: &mut ThreadRng,
         eps: f32,
     ) {
-        const TOTAL: usize = 100;
-
-        for _ in 0..TOTAL {
+        for _ in 0..EPOCH {
             let mut game = game.clone();
             states.clear();
 
@@ -497,7 +495,7 @@ fn forward(mut input: [f32; {IN}]) -> [f32; {OUT}] {{
         }
     }
 
-    pub fn train<G: Game>(
+    pub fn train<G: Game, const EPOCH: usize>(
         &mut self,
         game: &G,
         states: &mut Vec<([f32; IN], usize)>,
@@ -505,9 +503,7 @@ fn forward(mut input: [f32; {IN}]) -> [f32; {OUT}] {{
         rng: &mut ThreadRng,
         eps: f32,
     ) {
-        const TOTAL: usize = 100;
-
-        for _ in 0..TOTAL {
+        for _ in 0..EPOCH {
             let mut game = game.clone();
             states.clear();
 
