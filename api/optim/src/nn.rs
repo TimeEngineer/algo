@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use matrix::Matrix;
 use rand::{
     distributions::Uniform,
@@ -80,7 +81,7 @@ impl<const IN: usize, const HIDDEN: usize, const OUT: usize> NN<IN, HIDDEN, OUT>
         self.vt = [0.; OUT];
     }
 
-    pub fn helper() {
+    pub fn helper(&self) {
         println!("
 fn input_normalization<const IN: usize>(input: &mut [f32; IN]) {{
     let mean = input.iter().sum::<f32>() / IN as f32;
@@ -100,10 +101,12 @@ fn layer_forward<const N: usize, const M: usize>(w: [[f32; M]; N], b: [f32; N], 
     out
 }}
 
-fn relu(output: &mut [f32]) {{
-    output
-        .iter_mut()
-        .for_each(|h| if *h < 0. {{ *h = 0. }});
+fn relu<const N: usize>(output: &mut [f32; N]) {{
+    output.iter_mut().for_each(|h| {{
+        if *h < 0. {{
+            *h = 0.
+        }}
+    }});
 }}
 
 fn forward(mut input: [f32; {IN}]) -> [f32; {OUT}] {{
@@ -437,7 +440,7 @@ fn forward(mut input: [f32; {IN}]) -> [f32; {OUT}] {{
             match game.status() {
                 Status::Win(i) => stats[i] += 1,
                 Status::Draw => stats[STATS_SIZE - 1] += 1,
-                _ => panic!("Something goes wrong"),
+                _ => panic!("Something goes wrong {game:?}"),
             }
         }
         stats.iter_mut().for_each(|s| *s /= (TOTAL / 100) as i32);
@@ -569,7 +572,7 @@ fn backward() {
     assert!(nn.output[action] > old[action]);
 }
 
-#[derive(Debug, Default, Clone, Copy, PartialEq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum Status {
     Win(usize),
     Draw,
@@ -577,7 +580,7 @@ pub enum Status {
     None,
 }
 
-pub trait Game: Clone {
+pub trait Game: Clone + Debug {
     /// Flatten into NN input
     fn input<const N: usize>(&self) -> [f32; N];
     fn turn(&self) -> usize;

@@ -5,7 +5,7 @@ use std::time::{Duration, Instant};
 ///
 /// The more depth, the less precision
 pub trait MonteCarlo<A: Copy + std::fmt::Debug>: Clone {
-    /// Generate all possible actions,don't forget to clear
+    /// Generate all possible actions, don't forget to clear
     fn fill(&self, actions: &mut Vec<A>);
     /// Update the system
     fn update(&mut self, action: A) -> f32;
@@ -20,7 +20,7 @@ pub trait MonteCarlo<A: Copy + std::fmt::Debug>: Clone {
             if depth == max_depth {
                 return score;
             }
-            score += run.update(*action);
+            score += (0.7f32).powi(depth as i32) * run.update(*action);
             depth += 1;
             run.fill(actions);
         }
@@ -55,16 +55,19 @@ pub trait MonteCarlo<A: Copy + std::fmt::Debug>: Clone {
         &self,
         max: Duration,
         actions: &mut Vec<A>,
+        buffer: &mut Vec<A>,
         max_depth: usize,
         rng: &mut ThreadRng,
     ) -> Option<(A, f32)> {
         self.fill(actions);
+        if actions.is_empty() {
+            return None;
+        }
         let max = Duration::from_nanos((max.as_nanos() / actions.len() as u128) as u64);
-        let mut _actions = vec![];
         actions
             .iter()
             .copied()
-            .map(|a| (a, self.multi_run(max, a, &mut _actions, max_depth, rng)))
+            .map(|a| (a, self.multi_run(max, a, buffer, max_depth, rng)))
             .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
     }
 }

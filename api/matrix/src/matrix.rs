@@ -2,7 +2,7 @@ use core::fmt::{Debug, Error, Formatter};
 use core::ops::{Index, IndexMut, Mul};
 use std::ops::AddAssign;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Matrix<T, const N: usize, const M: usize>(pub [[T; M]; N]);
 pub type SMatrix<T, const N: usize> = Matrix<T, N, N>;
 
