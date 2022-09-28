@@ -5,6 +5,8 @@ use std::time::{Duration, Instant};
 ///
 /// The more depth, the less precision
 pub trait MonteCarlo<A: Copy + std::fmt::Debug>: Clone {
+    const RATE: f32;
+
     /// Generate all possible actions, don't forget to clear
     fn fill(&self, actions: &mut Vec<A>);
     /// Update the system
@@ -20,7 +22,7 @@ pub trait MonteCarlo<A: Copy + std::fmt::Debug>: Clone {
             if depth == max_depth {
                 return score;
             }
-            score += (0.7f32).powi(depth as i32) * run.update(*action);
+            score += Self::RATE.powi(depth as i32) * run.update(*action);
             depth += 1;
             run.fill(actions);
         }

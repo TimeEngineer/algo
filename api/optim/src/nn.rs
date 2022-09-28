@@ -1,4 +1,3 @@
-use std::fmt::Debug;
 use matrix::Matrix;
 use rand::{
     distributions::Uniform,
@@ -6,6 +5,7 @@ use rand::{
     Rng,
 };
 use rand_distr::Normal;
+use std::fmt::Debug;
 use vector::VectorOp;
 
 #[derive(Clone)]
