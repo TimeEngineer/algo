@@ -1,6 +1,4 @@
-use rand::{
-    prelude::{SliceRandom, ThreadRng},
-};
+use rand::prelude::{SliceRandom, ThreadRng};
 use std::{
     cell::RefCell,
     collections::HashMap,
@@ -91,7 +89,7 @@ impl<A: Copy> Node<A> {
 pub trait Mcts<A: Debug + Copy + Eq + Hash>: Debug + Clone {
     /// Generate all possible actions
     fn fill(&self, actions: &mut Vec<A>);
-    
+
     /// Update the system
     fn update(&mut self, action: A) -> i64;
 
@@ -128,7 +126,7 @@ pub trait Mcts<A: Debug + Copy + Eq + Hash>: Debug + Clone {
                 });
 
                 self.rollout(rng, &child, actions);
-                
+
                 // Update node (backpropagation)
                 *node.score.borrow_mut() += *child.score.borrow();
                 node_children.insert(action, child);
@@ -163,7 +161,7 @@ pub trait Mcts<A: Debug + Copy + Eq + Hash>: Debug + Clone {
 #[test]
 fn test() {
     use super::Mcts;
-    
+
     #[derive(Debug, Clone)]
     enum Game {
         State0,
@@ -196,9 +194,7 @@ fn test() {
 
         fn update(&mut self, action: Action) -> i64 {
             match action {
-                Action::A0 => {
-                    0
-                }
+                Action::A0 => 0,
                 Action::A1 => {
                     *self = Game::State1;
                     0
