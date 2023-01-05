@@ -263,8 +263,8 @@ fn forward(mut input: [f32; {IN}]) -> [f32; {OUT}] {{
             let gradient = self.output[i] - target[i];
             self.mt[i] = B1 * self.mt[i] + (1. - B1) * gradient;
             self.vt[i] = B2 * self.vt[i] + (1. - B2) * gradient.powi(2);
-            let mhat = self.mt[i] / (1. - B1.powi(self.t as i32));
-            let vhat = self.vt[i] / (1. - B2.powi(self.t as i32));
+            let mhat = self.mt[i] / (1. - B1.powi(self.t));
+            let vhat = self.vt[i] / (1. - B2.powi(self.t));
             grad[i] = LR * mhat / (vhat.sqrt() + EPS);
         }
         grad
