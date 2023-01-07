@@ -63,24 +63,35 @@ impl<A: Copy> Node<A> {
         let pvisit = *self.parent.upgrade().unwrap().visit.borrow();
         score / visit + (2. * (pvisit as f64).ln() / visit).sqrt()
     }
-    pub fn best_action(&self) -> A {
-        *self
-            .children
+    pub fn best_action(&self) -> Option<A> {
+        self.children
             .borrow()
             .iter()
             .max_by(|a, b| a.1.eval().partial_cmp(&b.1.eval()).unwrap())
-            .unwrap()
-            .0
+            .map(|x| *x.0)
     }
 
-    pub fn worst_action(&self) -> A {
-        *self
-            .children
+    pub fn worst_action(&self) -> Option<A> {
+        self.children
             .borrow()
             .iter()
             .min_by(|a, b| a.1.eval().partial_cmp(&b.1.eval()).unwrap())
-            .unwrap()
-            .0
+            .map(|x| *x.0)
+    }
+}
+
+pub struct Garbage<A>(Vec<Rc<Node<A>>>);
+
+impl<A> std::ops::Deref for Garbage<A> {
+    type Target = Vec<Rc<Node<A>>>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<A> std::ops::DerefMut for Garbage<A> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 
@@ -152,9 +163,15 @@ pub trait Mcts<A: Debug + Copy + Eq + Hash>: Debug + Clone {
         }
     }
 
-    fn advance(&mut self, node: &Rc<Node<A>>, action: A) -> Rc<Node<A>> {
+    fn advance(&mut self, garbage: &mut Garbage<A>, node: Rc<Node<A>>, action: A) -> Rc<Node<A>> {
         self.update(action);
-        node.children.borrow_mut().remove(&action).unwrap()
+        let child = node
+            .children
+            .borrow_mut()
+            .remove(&action)
+            .unwrap_or_default();
+        garbage.push(node);
+        child
     }
 }
 
