@@ -10,7 +10,7 @@ use std::{
 /// GA stands for Genetic Algorithm
 /// - A: Action
 /// - CHR_SIZE: Chromosome size
-/// - POP_SIZE: Population size ( > 10)
+/// - POP_SIZE: Population size (> 10)
 /// - SEL_SIZE: Population size kept (< POP_SIZE)
 pub trait Ga<A: Debug + Default + Copy, const CHR_SIZE: usize>: Debug + Clone {
     const POP_SIZE: usize;
@@ -59,10 +59,10 @@ pub trait Ga<A: Debug + Default + Copy, const CHR_SIZE: usize>: Debug + Clone {
     fn ga(
         &mut self,
         rng: &mut ThreadRng,
-        population: &mut Vec<[A; CHR_SIZE]>,
+        population: &mut Vec<(i64, [A; CHR_SIZE])>,
         possible_genes: &mut [Vec<A>; CHR_SIZE],
         total_time: Duration,
-    ) -> [A; CHR_SIZE] {
+    ) -> (i64, [A; CHR_SIZE]) {
         let now = Instant::now();
         let mut max_time = Duration::default();
 
@@ -70,17 +70,19 @@ pub trait Ga<A: Debug + Default + Copy, const CHR_SIZE: usize>: Debug + Clone {
 
         // Can't build chromosome without choice
         if possible_genes.iter().map(Vec::len).sum::<usize>() == 0 {
-            return [A::default(); CHR_SIZE];
+            return (0, [A::default(); CHR_SIZE]);
         }
 
-        population.clear();
         population.reserve(Self::POP_SIZE);
         for _ in 0..Self::POP_SIZE {
-            population.push(Self::gen(rng, possible_genes))
+            population.push((0, Self::gen(rng, possible_genes)))
         }
 
         // Sort in reversed way, best must be first
-        population.sort_by_key(|a| std::cmp::Reverse(self.eval(a)));
+        population
+            .iter_mut()
+            .for_each(|(score, chr)| *score = self.eval(chr));
+        population.sort_by_key(|(score, _)| std::cmp::Reverse(*score));
 
         while now.elapsed() + max_time < total_time {
             let t = Instant::now();
@@ -90,13 +92,16 @@ pub trait Ga<A: Debug + Default + Copy, const CHR_SIZE: usize>: Debug + Clone {
 
             // Perform crossover & mutation
             for _ in population.len()..Self::POP_SIZE {
-                let chromosome0 = population.choose(rng).unwrap();
-                let chromosome1 = population.choose(rng).unwrap();
-                population.push(Self::mate(rng, possible_genes, chromosome0, chromosome1))
+                let chromosome0 = population.choose(rng).unwrap().1;
+                let chromosome1 = population.choose(rng).unwrap().1;
+                population.push((0, Self::mate(rng, possible_genes, &chromosome0, &chromosome1)))
             }
 
             // Order
-            population.sort_by_key(|a| std::cmp::Reverse(self.eval(a)));
+            population
+                .iter_mut()
+                .for_each(|(score, chr)| *score = self.eval(chr));
+            population.sort_by_key(|(score, _)| std::cmp::Reverse(*score));
 
             max_time = std::cmp::max(max_time, t.elapsed());
         }

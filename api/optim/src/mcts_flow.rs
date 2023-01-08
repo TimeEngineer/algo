@@ -85,7 +85,7 @@ pub trait MctsFlow<A: Debug + Copy>: Clone {
             .map(|(a, (s, n))| {
                 let n = n as f32;
                 let s = s as f32;
-                (a, s / n + (2. * n_tot.ln() / n as f32).sqrt())
+                (a, s / n + (2. * n_tot.ln() / n).sqrt())
             })
             .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
     }
